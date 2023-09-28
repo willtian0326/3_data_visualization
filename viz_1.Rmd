@@ -34,4 +34,167 @@ weather_df =
 weather_df
 ```
 
+## Scatterplots
+
+Create a first scatter plot
+
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax)) +
+  geom_point()
+```
+
+New approach using pipes:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_point()
+```
+
+Save and edit plot objects:
+
+```{r}
+weather_plot =
+  weather_df |>
+  ggplot(aes(x = tmin, y = tmax))
+
+weather_plot + geom_point()
+```
+
+## Advanced Scatterplot
+
+Start with the same one and make it fancy!
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+What about `aes` placement?
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name)) + # Putting color here means color is only applied to the scatterplot and will not be used when drawing smooth line later on.
+  geom_smooth(se = FALSE)
+```
+
+Facet:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name) # . means nothing defies rows, and ~ means what defiens cols.
+
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  facet_grid(name ~ .)
+
+# Define transparency (alpha) to make line more visible:
+
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = 0.2) +
+  geom_smooth(se = FALSE, size = 2) +
+  facet_grid(. ~ name)
+```
+
+Lets combine some elements and try a new plot:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_point(aes(size = prcp, alpha = .5)) +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+```
+
+## Some small notes
+
+How many geoms have to exist?
+You can have whatever geoms you want.
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_smooth(se = FALSE) # only line, no points 
+  
+```
+
+You can also use a neat geom:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex() +
+  geom_density2d()
+```
+
+## Univariate Plots
+
+Histograms:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, color = name)) +
+  geom_histogram()
+```
+
+Position not great, change position and change color to fill:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, fill = name)) +
+  geom_histogram(position = 'dodge')
+```
+
+Put them side by side:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, fill = name)) +
+  geom_histogram() +
+  facet_grid(. ~ name)
+```
+
+Try a new geometry!
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, fill = name)) +
+  geom_density(alpha = 0.3)
+```
+
+What about box plots?
+
+```{r}
+weather_df |>
+  ggplot(aes(x = name, y = tmin)) + 
+  geom_boxplot()
+```
+
+Other trendy plots (with statistics):
+
+```{r}
+weather_df |>
+  ggplot(aes(x = name, y = tmin, fill = name)) +
+  geom_violin(alpha = 0.5) +
+  stat_summary()
+```
+
+Ridge plots:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = name, fill = name)) +
+  geom_density_ridges(alpha = 0.5)
+```
+
+
 
