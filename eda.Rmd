@@ -1,0 +1,141 @@
+---
+title: "EDA"
+author: "Wenxin Tian"
+date: "`r Sys.Date()`"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USW00022534", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2021-01-01",
+    date_max = "2022-12-31") |>
+  mutate(
+    name = recode(
+      id, 
+      USW00094728 = "CentralPark_NY", 
+      USW00022534 = "Molokai_HI",
+      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10,
+    month = lubridate::floor_date(date, unit = "month")) |>
+  select(name, id, everything())
+```
+
+## Initial numeric work
+
+```{r}
+weather_df |>
+  ggplot(aes(x = prcp)) +
+  geom_histogram()
+```
+
+Find big outliers and filter out:
+
+```{r}
+weather_df |>
+  filter(prcp > 1000)
+
+weather_df |>
+  filter(tmax >= 20, tmax <= 30) |>
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point()
+```
+
+## Grouping:
+
+Adds an invisible layer on selected variables
+
+```{r}
+weather_df |>
+  group_by(name, month) |>
+  summarize(n_obs = n()) # counts how many observations are in each group
+
+# Achieve similar results using count()
+
+weather_df |>
+  count(name)
+
+weather_df |>
+  count(name, month) |>
+  pivot_wider(
+    names_from = name,
+    values_from = n
+  )
+```
+
+## General Summaries:
+
+```{r}
+weather_df |>
+  group_by(name, month) |>
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE), #removing NA
+    median_tmax = median(tmax, na.rm = TRUE)
+  )
+```
+
+```{r}
+weather_df |>
+  group_by(name, month) |>
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) |>
+  ggplot(aes(x = month, y = mean_tmax, color = name)) +
+  geom_point() +
+  geom_line()
+```
+
+Formating a table:
+
+```{r}
+weather_df |>
+  group_by(name, month) |>
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) |>
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax
+  ) |>
+  knitr::kable(digits = 2)
+```
+
+## Grouped mutate:
+
+```{r}
+weather_df |>
+  group_by(name) |>
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    centered_tmax = tmax - mean_tmax) |>
+  ggplot(aes(x = date, y = centered_tmax, color = name)) +
+  geom_point()
+```
+
+```{r}
+weather_df |>
+  group_by(name, month) |>
+  mutate(tmax_rank = min_rank(desc(tmax))) |>
+  filter(tmax_rank < 2)
+```
+
+lags (comparing to previous row)
+
+```{r}
+weather_df |>
+  group_by(name) |>
+  mutate(yesterday_tmax = lag(tmax, 3))
+```
+
+```{r}
+weather_df |>
+  group_by(name) |>
+  mutate(temp_change = tmax - lag(tmax)) |>
+  summarize(
+    sd_temp_change = sd(temp_change, na.rm = TRUE)
+  )
+```
+
