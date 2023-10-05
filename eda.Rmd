@@ -135,7 +135,9 @@ weather_df |>
   group_by(name) |>
   mutate(temp_change = tmax - lag(tmax)) |>
   summarize(
+    mean_temp_change = mean(temp_change, na.rm = TRUE),
     sd_temp_change = sd(temp_change, na.rm = TRUE)
+    
   )
 ```
 
